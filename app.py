@@ -12,8 +12,8 @@ app.secret_key = "admin"
 run_terminal(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-clients = {}      # clientId -> frame
-last_seen = {}    # clientId -> last timestamp
+clients = {}
+last_seen = {}
 lock = threading.Lock()
 
 @app.route('/')
@@ -31,14 +31,13 @@ def handle_frame(data):
     if img is not None:
         with lock:
             clients[client_id] = img
-            last_seen[client_id] = time.time()  # อัปเดตเวลาที่ส่งข้อมูลล่าสุด
+            last_seen[client_id] = time.time()
 
 def show_frames():
     while True:
         current_time = time.time()
         with lock:
             for client_id in list(clients.keys()):
-                # ถ้าหยุดส่งเกิน 5 วิ -> ปิดหน้าต่าง + ลบข้อมูล
                 if current_time - last_seen.get(client_id, 0) > 2:
                     if cv2.getWindowProperty(f"Client: {client_id}", cv2.WND_PROP_VISIBLE) >= 0:
                         cv2.destroyWindow(f"Client: {client_id}")
